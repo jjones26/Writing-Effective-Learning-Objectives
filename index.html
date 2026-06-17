@@ -4,63 +4,109 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Writing Effective Learning Objectives</title>
-
-  <!-- Google Fonts: DM Serif Display (headings) + Inter (body) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap"
-    rel="stylesheet"
-  />
-
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
-  <!-- ============================================================
-       TOP PROGRESS BAR & NAVIGATION HEADER
-  ============================================================ -->
-  <header class="site-header" role="banner">
-    <div class="header-inner">
-      <span class="course-label">Microlearning</span>
-      <span class="course-title">Writing Effective Learning Objectives</span>
-      <span class="slide-counter" id="slideCounter" aria-live="polite">1 / 12</span>
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside class="sidebar" id="sidebar" role="navigation" aria-label="Course sections">
+    <div class="sidebar-header">
+      <span class="sidebar-label">Microlearning</span>
+      <p class="sidebar-title">Writing Effective Learning Objectives</p>
     </div>
-
-    <!-- Milestone progress track -->
-    <nav class="progress-track" aria-label="Course progress">
-      <div class="progress-fill" id="progressFill"></div>
-      <div class="milestones" id="milestones" role="list">
-        <!-- Milestones injected by JS -->
-      </div>
+    <nav>
+      <ol class="sidebar-nav" id="sidebarNav">
+        <li class="nav-item" data-section="1">
+          <span class="nav-num">1</span>
+          <span class="nav-text">Introduction</span>
+          <span class="nav-check" aria-hidden="true">✓</span>
+        </li>
+        <li class="nav-item" data-section="2">
+          <span class="nav-num">2</span>
+          <span class="nav-text">What Makes an Objective Effective?</span>
+          <span class="nav-check" aria-hidden="true">✓</span>
+        </li>
+        <li class="nav-item" data-section="3">
+          <span class="nav-num">3</span>
+          <span class="nav-text">Bloom's Taxonomy</span>
+          <span class="nav-check" aria-hidden="true">✓</span>
+        </li>
+        <li class="nav-item" data-section="4">
+          <span class="nav-num">4</span>
+          <span class="nav-text">Strong vs. Weak Examples</span>
+          <span class="nav-check" aria-hidden="true">✓</span>
+        </li>
+        <li class="nav-item" data-section="5">
+          <span class="nav-num">5</span>
+          <span class="nav-text">Activity: Spot the Weak Objective</span>
+          <span class="nav-check" aria-hidden="true">✓</span>
+        </li>
+        <li class="nav-item" data-section="6">
+          <span class="nav-num">6</span>
+          <span class="nav-text">Activity: Pick the Right Verb</span>
+          <span class="nav-check" aria-hidden="true">✓</span>
+        </li>
+        <li class="nav-item" data-section="7">
+          <span class="nav-num">7</span>
+          <span class="nav-text">Rewrite Tips</span>
+          <span class="nav-check" aria-hidden="true">✓</span>
+        </li>
+        <li class="nav-item" data-section="8">
+          <span class="nav-num">8</span>
+          <span class="nav-text">Activity: Rewrite Objectives</span>
+          <span class="nav-check" aria-hidden="true">✓</span>
+        </li>
+        <li class="nav-item" data-section="9">
+          <span class="nav-num">9</span>
+          <span class="nav-text">Knowledge Check</span>
+          <span class="nav-check" aria-hidden="true">✓</span>
+        </li>
+        <li class="nav-item" data-section="10">
+          <span class="nav-num">10</span>
+          <span class="nav-text">Completion</span>
+          <span class="nav-check" aria-hidden="true">✓</span>
+        </li>
+      </ol>
     </nav>
+    <div class="sidebar-progress">
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progressFill"></div>
+      </div>
+      <span class="progress-label" id="progressLabel">0% complete</span>
+    </div>
+  </aside>
+
+  <!-- ===================== MOBILE HEADER ===================== -->
+  <header class="mobile-header" id="mobileHeader">
+    <button class="menu-toggle" id="menuToggle" aria-label="Open menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+    <span class="mobile-title">Writing Effective Learning Objectives</span>
+    <span class="mobile-counter" id="mobileCounter">1/10</span>
   </header>
 
-  <!-- ============================================================
-       MAIN SLIDE CONTAINER
-  ============================================================ -->
-  <main class="slide-stage" id="slideStage" role="main">
+  <!-- Mobile overlay -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
 
-    <!-- ─── SLIDE 1 · INTRO ─────────────────────────────────── -->
-    <section class="slide active" id="slide-1" data-slide="1" aria-label="Introduction">
-      <div class="slide-content centered">
+  <!-- ===================== MAIN CONTENT ===================== -->
+  <main class="main-content" id="mainContent">
+
+    <!-- ─── SECTION 1 · INTRO ─── -->
+    <section class="content-section" id="section-1" data-section="1">
+      <div class="section-inner">
         <span class="eyebrow">Let's get started</span>
         <h1>Why Learning Objectives Matter</h1>
-        <p class="lead">
-          Before anyone opens a module, clicks through a deck, or sits down for a workshop,
-          someone has to answer one question: <em>what should learners be able to do when this is over?</em>
-        </p>
-        <div class="callout-card">
-          <p>
-            A well-written learning objective is the contract between the designer and the learner.
-            It tells learners exactly what they're working toward, guides your content and assessment
-            decisions, and gives you a way to measure whether the training actually worked.
-          </p>
-        </div>
-        <p class="body-text">
-          In the next 5–7 minutes, you'll learn to spot weak objectives, apply Bloom's Taxonomy
-          to pick the right action verbs, and write objectives that hold up to scrutiny.
-        </p>
+        <p class="lead">Before anyone opens a module, clicks through a deck, or sits down for a workshop, someone has to answer one question: <em>what should learners be able to do when this is over?</em></p>
+
+        <blockquote>
+          A well-written learning objective is the contract between the designer and the learner. It tells learners exactly what they're working toward, guides your content and assessment decisions, and gives you a way to measure whether the training actually worked.
+        </blockquote>
+
+        <p>In the next 5–7 minutes, you'll learn to spot weak objectives, apply Bloom's Taxonomy to pick the right action verbs, and write objectives that hold up to scrutiny.</p>
+
         <div class="obj-list">
           <h3>By the end, you will be able to:</h3>
           <ul>
@@ -69,126 +115,131 @@
             <li>Write learning objectives aligned with desired outcomes</li>
           </ul>
         </div>
+
+        <div class="continue-row">
+          <button class="back-btn hidden" data-back="0">← Back</button>
+          <button class="btn-continue" data-next="2">Continue →</button>
+        </div>
       </div>
     </section>
 
-    <!-- ─── SLIDE 2 · ANATOMY OF AN OBJECTIVE ──────────────── -->
-    <section class="slide" id="slide-2" data-slide="2" aria-label="Anatomy of a learning objective">
-      <div class="slide-content centered">
+    <!-- ─── SECTION 2 · ANATOMY \─── -->
+    <section class="content-section locked" id="section-2" data-section="2">
+      <div class="section-inner">
         <span class="eyebrow">The building blocks</span>
         <h2>What Makes an Objective "Effective"?</h2>
-        <p class="body-text">
-          Effective learning objectives share three characteristics. They describe
-          an <strong>observable behavior</strong>, specify the <strong>conditions</strong> under which
-          it should occur, and define an implied or explicit <strong>standard</strong> for success.
-        </p>
-        <div class="anatomy-grid">
-          <div class="anatomy-card">
-            <div class="anatomy-icon">👁️</div>
+        <p>Effective learning objectives share three characteristics. They describe an <strong>observable behavior</strong>, specify the <strong>conditions</strong> under which it should occur, and define an implied or explicit <strong>standard</strong> for success.</p>
+
+        <div class="card-row">
+          <div class="card">
+            <div class="card-icon">👁</div>
             <h4>Observable</h4>
             <p>Someone watching the learner can confirm it happened. "Understand" can't be observed. "Explain" can.</p>
           </div>
-          <div class="anatomy-card">
-            <div class="anatomy-icon">📏</div>
+          <div class="card">
+            <div class="card-icon">📏</div>
             <h4>Measurable</h4>
             <p>There's a verb with a finish line. You can assess whether the learner got there.</p>
           </div>
-          <div class="anatomy-card">
-            <div class="anatomy-icon">🎯</div>
+          <div class="card">
+            <div class="card-icon">🎯</div>
             <h4>Aligned</h4>
             <p>The objective connects directly to what matters on the job or in the course. No filler.</p>
           </div>
         </div>
+
         <div class="formula-box">
-          <span class="formula-label">The formula</span>
-          <p class="formula-text">
+          <p class="formula-label">The formula</p>
+          <div class="formula-tokens">
             <span class="token action">Action verb</span>
             <span class="token-plus">+</span>
             <span class="token content">content / skill</span>
             <span class="token-plus">+</span>
             <span class="token context">context or condition</span>
-          </p>
-          <p class="formula-example">
-            "Given a sample policy document, <strong>identify</strong> three compliance violations."
-          </p>
+          </div>
+          <p class="formula-example">"Given a sample policy document, <strong>identify</strong> three compliance violations."</p>
+        </div>
+
+        <div class="continue-row">
+          <button class="back-btn" data-back="1">← Back</button>
+          <button class="btn-continue" data-next="3">Continue →</button>
         </div>
       </div>
     </section>
 
-    <!-- ─── SLIDE 3 · BLOOMS OVERVIEW ───────────────────────── -->
-    <section class="slide" id="slide-3" data-slide="3" aria-label="Bloom's Taxonomy overview">
-      <div class="slide-content">
+    <!-- ─── SECTION 3 · BLOOMS ─── -->
+    <section class="content-section locked" id="section-3" data-section="3">
+      <div class="section-inner">
         <span class="eyebrow">A tool for verb selection</span>
         <h2>Bloom's Taxonomy at a Glance</h2>
-        <p class="body-text">
-          Bloom's Taxonomy organizes cognitive skills from foundational to complex.
-          Each level has a set of action verbs that signal work at that level.
-          Choosing the right verb ensures your objective matches the intended depth of learning.
-        </p>
-        <div class="blooms-pyramid" role="list" aria-label="Bloom's Taxonomy levels">
-          <div class="bloom-level level-6" role="listitem">
-            <div class="level-info">
-              <span class="level-name">Create</span>
-              <span class="level-verbs">Design · Develop · Construct · Produce · Formulate</span>
+        <p>Bloom's Taxonomy organizes cognitive skills from foundational to complex. Each level has a set of action verbs that signal work at that level. Choosing the right verb ensures your objective matches the intended depth of learning.</p>
+
+        <div class="blooms-table" role="list" aria-label="Bloom's Taxonomy levels">
+          <div class="bloom-row level-6" role="listitem">
+            <div class="bloom-meta">
+              <span class="bloom-num">6</span>
+              <span class="bloom-name">Create</span>
             </div>
-            <div class="level-badge">6</div>
+            <span class="bloom-verbs">Design · Develop · Construct · Produce · Formulate</span>
           </div>
-          <div class="bloom-level level-5" role="listitem">
-            <div class="level-info">
-              <span class="level-name">Evaluate</span>
-              <span class="level-verbs">Assess · Justify · Critique · Defend · Judge</span>
+          <div class="bloom-row level-5" role="listitem">
+            <div class="bloom-meta">
+              <span class="bloom-num">5</span>
+              <span class="bloom-name">Evaluate</span>
             </div>
-            <div class="level-badge">5</div>
+            <span class="bloom-verbs">Assess · Justify · Critique · Defend · Judge</span>
           </div>
-          <div class="bloom-level level-4" role="listitem">
-            <div class="level-info">
-              <span class="level-name">Analyze</span>
-              <span class="level-verbs">Compare · Differentiate · Examine · Classify · Distinguish</span>
+          <div class="bloom-row level-4" role="listitem">
+            <div class="bloom-meta">
+              <span class="bloom-num">4</span>
+              <span class="bloom-name">Analyze</span>
             </div>
-            <div class="level-badge">4</div>
+            <span class="bloom-verbs">Compare · Differentiate · Examine · Classify · Distinguish</span>
           </div>
-          <div class="bloom-level level-3" role="listitem">
-            <div class="level-info">
-              <span class="level-name">Apply</span>
-              <span class="level-verbs">Use · Demonstrate · Execute · Implement · Calculate</span>
+          <div class="bloom-row level-3" role="listitem">
+            <div class="bloom-meta">
+              <span class="bloom-num">3</span>
+              <span class="bloom-name">Apply</span>
             </div>
-            <div class="level-badge">3</div>
+            <span class="bloom-verbs">Use · Demonstrate · Execute · Implement · Calculate</span>
           </div>
-          <div class="bloom-level level-2" role="listitem">
-            <div class="level-info">
-              <span class="level-name">Understand</span>
-              <span class="level-verbs">Explain · Describe · Summarize · Classify · Paraphrase</span>
+          <div class="bloom-row level-2" role="listitem">
+            <div class="bloom-meta">
+              <span class="bloom-num">2</span>
+              <span class="bloom-name">Understand</span>
             </div>
-            <div class="level-badge">2</div>
+            <span class="bloom-verbs">Explain · Describe · Summarize · Classify · Paraphrase</span>
           </div>
-          <div class="bloom-level level-1" role="listitem">
-            <div class="level-info">
-              <span class="level-name">Remember</span>
-              <span class="level-verbs">List · Recall · Name · Identify · Define · State</span>
+          <div class="bloom-row level-1" role="listitem">
+            <div class="bloom-meta">
+              <span class="bloom-num">1</span>
+              <span class="bloom-name">Remember</span>
             </div>
-            <div class="level-badge">1</div>
+            <span class="bloom-verbs">List · Recall · Name · Identify · Define · State</span>
           </div>
         </div>
-        <p class="tip-text">
+
+        <div class="tip-box">
           💡 Most workplace training lives at Apply and Analyze. If your verbs are stuck at Remember, ask whether learners actually need to <em>do</em> something more complex.
-        </p>
+        </div>
+
+        <div class="continue-row">
+          <button class="back-btn" data-back="2">← Back</button>
+          <button class="btn-continue" data-next="4">Continue →</button>
+        </div>
       </div>
     </section>
 
-    <!-- ─── SLIDE 4 · STRONG VS WEAK EXAMPLES ───────────────── -->
-    <section class="slide" id="slide-4" data-slide="4" aria-label="Strong vs weak objective examples">
-      <div class="slide-content centered">
+    <!-- ─── SECTION 4 · EXAMPLES ─── -->
+    <section class="content-section locked" id="section-4" data-section="4">
+      <div class="section-inner">
         <span class="eyebrow">See the difference</span>
         <h2>Strong vs. Weak: Side by Side</h2>
-        <p class="body-text">
-          The difference between a vague objective and an effective one often comes down to
-          a single word — the verb. Compare these pairs.
-        </p>
+        <p>The difference between a vague objective and an effective one often comes down to a single word — the verb. Compare these pairs.</p>
+
         <div class="compare-grid">
           <div class="compare-col weak-col">
-            <div class="compare-header">
-              <span class="compare-icon">✗</span> Weak Objectives
-            </div>
+            <div class="compare-header weak-header">✗ &nbsp;Weak Objectives</div>
             <div class="compare-item">
               <p>"Understand the importance of data privacy."</p>
               <span class="compare-note">Can't observe or measure "understand"</span>
@@ -207,9 +258,7 @@
             </div>
           </div>
           <div class="compare-col strong-col">
-            <div class="compare-header">
-              <span class="compare-icon">✓</span> Strong Objectives
-            </div>
+            <div class="compare-header strong-header">✓ &nbsp;Strong Objectives</div>
             <div class="compare-item">
               <p>"Explain two data privacy risks using a real-world scenario."</p>
               <span class="compare-note">Observable, specific, assessable</span>
@@ -220,7 +269,7 @@
             </div>
             <div class="compare-item">
               <p>"Complete the first three steps of the onboarding checklist without assistance."</p>
-              <span class="compare-note">Concrete standard built into the objective</span>
+              <span class="compare-note">Concrete standard built in</span>
             </div>
             <div class="compare-item">
               <p>"Demonstrate the four-step complaint resolution process in a role-play scenario."</p>
@@ -228,262 +277,207 @@
             </div>
           </div>
         </div>
+
+        <div class="continue-row">
+          <button class="back-btn" data-back="3">← Back</button>
+          <button class="btn-continue" data-next="5">Continue →</button>
+        </div>
       </div>
     </section>
 
-    <!-- ─── SLIDE 5 · ACTIVITY 1 — SPOT THE WEAK OBJECTIVE ──── -->
-    <section class="slide" id="slide-5" data-slide="5" aria-label="Activity: identify weak objectives">
-      <div class="slide-content centered">
+    <!-- ─── SECTION 5 · ACTIVITY 1 ─── -->
+    <section class="content-section locked" id="section-5" data-section="5">
+      <div class="section-inner">
         <span class="eyebrow">Activity 1 of 3</span>
         <h2>Spot the Weak Objective</h2>
-        <p class="body-text">
-          Read each objective below. Select the one that is <strong>NOT measurable</strong>
-          — the one that uses a vague or unobservable verb.
-        </p>
+        <p>Read each objective below. Select the one that is <strong>not measurable</strong> — the one that uses a vague or unobservable verb.</p>
 
-        <div class="activity-container" id="activity1">
-          <div class="question-block" id="q1-block">
-            <p class="question-prompt">Which objective is weak (not measurable)?</p>
-            <div class="choices" role="radiogroup" aria-label="Choose the weak objective">
-              <button class="choice-btn" data-correct="false" data-question="q1">
-                Calculate the return on investment for a proposed training program.
-              </button>
-              <button class="choice-btn" data-correct="true" data-question="q1">
-                Appreciate the value of continuous learning in the workplace.
-              </button>
-              <button class="choice-btn" data-correct="false" data-question="q1">
-                Demonstrate the three steps for filing a support ticket.
-              </button>
-              <button class="choice-btn" data-correct="false" data-question="q1">
-                Compare synchronous and asynchronous training delivery formats.
-              </button>
-            </div>
-            <div class="feedback-box" id="q1-feedback" aria-live="polite"></div>
+        <!-- Q1 -->
+        <div class="question-block" id="q1-block">
+          <p class="question-prompt">Which objective is weak?</p>
+          <div class="choices" role="radiogroup" aria-label="Activity 1 question 1">
+            <button class="choice-btn" data-correct="false" data-question="q1">Calculate the return on investment for a proposed training program.</button>
+            <button class="choice-btn" data-correct="true" data-question="q1">Appreciate the value of continuous learning in the workplace.</button>
+            <button class="choice-btn" data-correct="false" data-question="q1">Demonstrate the three steps for filing a support ticket.</button>
+            <button class="choice-btn" data-correct="false" data-question="q1">Compare synchronous and asynchronous training delivery formats.</button>
           </div>
+          <div class="feedback-box" id="q1-feedback" aria-live="polite"></div>
+        </div>
 
-          <div class="question-block" id="q2-block" style="display:none;">
-            <p class="question-prompt">Which objective is weak (not measurable)?</p>
-            <div class="choices" role="radiogroup" aria-label="Choose the weak objective">
-              <button class="choice-btn" data-correct="false" data-question="q2">
-                Classify five common cognitive biases using provided case studies.
-              </button>
-              <button class="choice-btn" data-correct="false" data-question="q2">
-                Construct a 30-second elevator pitch for a new product feature.
-              </button>
-              <button class="choice-btn" data-correct="true" data-question="q2">
-                Understand the basics of agile project management.
-              </button>
-              <button class="choice-btn" data-correct="false" data-question="q2">
-                Identify the correct escalation path for a Tier 2 support issue.
-              </button>
-            </div>
-            <div class="feedback-box" id="q2-feedback" aria-live="polite"></div>
+        <!-- Q2 -->
+        <div class="question-block" id="q2-block" style="display:none;">
+          <p class="question-prompt">One more — which objective is weak?</p>
+          <div class="choices" role="radiogroup" aria-label="Activity 1 question 2">
+            <button class="choice-btn" data-correct="false" data-question="q2">Classify five common cognitive biases using provided case studies.</button>
+            <button class="choice-btn" data-correct="false" data-question="q2">Construct a 30-second elevator pitch for a new product feature.</button>
+            <button class="choice-btn" data-correct="true" data-question="q2">Understand the basics of agile project management.</button>
+            <button class="choice-btn" data-correct="false" data-question="q2">Identify the correct escalation path for a Tier 2 support issue.</button>
           </div>
+          <div class="feedback-box" id="q2-feedback" aria-live="polite"></div>
+        </div>
+
+        <div class="continue-row" id="continue-5" style="display:none;">
+          <button class="back-btn" data-back="4">← Back</button>
+          <button class="btn-continue" data-next="6">Continue →</button>
         </div>
       </div>
     </section>
 
-    <!-- ─── SLIDE 6 · ACTIVITY 2 — PICK THE RIGHT VERB ─────── -->
-    <section class="slide" id="slide-6" data-slide="6" aria-label="Activity: select Bloom's verbs">
-      <div class="slide-content centered">
+    <!-- ─── SECTION 6 · ACTIVITY 2 ─── -->
+    <section class="content-section locked" id="section-6" data-section="6">
+      <div class="section-inner">
         <span class="eyebrow">Activity 2 of 3</span>
         <h2>Pick the Right Bloom's Verb</h2>
-        <p class="body-text">
-          For each scenario, choose the verb that best matches the intended cognitive level.
-          Consider what the learner actually needs to <em>do</em>, not just recall.
-        </p>
+        <p>For each scenario, choose the verb that best matches the intended cognitive level.</p>
 
-        <div class="activity-container" id="activity2">
-          <div class="verb-question active-q" id="vq1">
-            <div class="scenario-box">
-              <span class="scenario-label">Scenario</span>
-              <p>
-                A new employee training on workplace safety should be able to look at a photo
-                of a workstation and spot what's wrong — no memorized list needed, just
-                recognition in context.
-              </p>
-              <strong>Target Bloom's level: Analyze (Level 4)</strong>
-            </div>
-            <p class="question-prompt">Which verb fits best?</p>
-            <div class="verb-choices" role="radiogroup" aria-label="Select the best verb">
-              <button class="verb-btn" data-correct="false" data-vq="vq1">Recall</button>
-              <button class="verb-btn" data-correct="false" data-vq="vq1">Understand</button>
-              <button class="verb-btn" data-correct="true" data-vq="vq1">Distinguish</button>
-              <button class="verb-btn" data-correct="false" data-vq="vq1">Know</button>
-            </div>
-            <div class="feedback-box" id="vq1-feedback" aria-live="polite"></div>
+        <div class="verb-question active-q" id="vq1">
+          <div class="scenario-box">
+            <span class="scenario-label">Scenario 1 · Target level: Analyze (4)</span>
+            <p>A new employee training on workplace safety should be able to look at a photo of a workstation and spot what's wrong — no memorized list needed, just recognition in context.</p>
           </div>
+          <div class="verb-choices" role="radiogroup" aria-label="Verb question 1">
+            <button class="verb-btn" data-correct="false" data-vq="vq1">Recall</button>
+            <button class="verb-btn" data-correct="false" data-vq="vq1">Understand</button>
+            <button class="verb-btn" data-correct="true" data-vq="vq1">Distinguish</button>
+            <button class="verb-btn" data-correct="false" data-vq="vq1">Know</button>
+          </div>
+          <div class="feedback-box" id="vq1-feedback" aria-live="polite"></div>
+        </div>
 
-          <div class="verb-question" id="vq2" style="display:none;">
-            <div class="scenario-box">
-              <span class="scenario-label">Scenario</span>
-              <p>
-                Customer service reps need to handle a difficult caller interaction by following
-                a documented four-step de-escalation process — the goal is performing the skill,
-                not just knowing it exists.
-              </p>
-              <strong>Target Bloom's level: Apply (Level 3)</strong>
-            </div>
-            <p class="question-prompt">Which verb fits best?</p>
-            <div class="verb-choices" role="radiogroup" aria-label="Select the best verb">
-              <button class="verb-btn" data-correct="false" data-vq="vq2">Define</button>
-              <button class="verb-btn" data-correct="true" data-vq="vq2">Demonstrate</button>
-              <button class="verb-btn" data-correct="false" data-vq="vq2">Appreciate</button>
-              <button class="verb-btn" data-correct="false" data-vq="vq2">Be aware of</button>
-            </div>
-            <div class="feedback-box" id="vq2-feedback" aria-live="polite"></div>
+        <div class="verb-question" id="vq2" style="display:none;">
+          <div class="scenario-box">
+            <span class="scenario-label">Scenario 2 · Target level: Apply (3)</span>
+            <p>Customer service reps need to handle a difficult caller interaction by following a documented four-step de-escalation process — the goal is performing the skill, not just knowing it exists.</p>
           </div>
+          <div class="verb-choices" role="radiogroup" aria-label="Verb question 2">
+            <button class="verb-btn" data-correct="false" data-vq="vq2">Define</button>
+            <button class="verb-btn" data-correct="true" data-vq="vq2">Demonstrate</button>
+            <button class="verb-btn" data-correct="false" data-vq="vq2">Appreciate</button>
+            <button class="verb-btn" data-correct="false" data-vq="vq2">Be aware of</button>
+          </div>
+          <div class="feedback-box" id="vq2-feedback" aria-live="polite"></div>
+        </div>
 
-          <div class="verb-question" id="vq3" style="display:none;">
-            <div class="scenario-box">
-              <span class="scenario-label">Scenario</span>
-              <p>
-                Advanced analysts should be able to look at two competing vendor proposals
-                and articulate why one is stronger — weighing evidence and making a judgment call.
-              </p>
-              <strong>Target Bloom's level: Evaluate (Level 5)</strong>
-            </div>
-            <p class="question-prompt">Which verb fits best?</p>
-            <div class="verb-choices" role="radiogroup" aria-label="Select the best verb">
-              <button class="verb-btn" data-correct="false" data-vq="vq3">List</button>
-              <button class="verb-btn" data-correct="false" data-vq="vq3">Describe</button>
-              <button class="verb-btn" data-correct="false" data-vq="vq3">Apply</button>
-              <button class="verb-btn" data-correct="true" data-vq="vq3">Justify</button>
-            </div>
-            <div class="feedback-box" id="vq3-feedback" aria-live="polite"></div>
+        <div class="verb-question" id="vq3" style="display:none;">
+          <div class="scenario-box">
+            <span class="scenario-label">Scenario 3 · Target level: Evaluate (5)</span>
+            <p>Advanced analysts should be able to look at two competing vendor proposals and articulate why one is stronger — weighing evidence and making a judgment call.</p>
           </div>
+          <div class="verb-choices" role="radiogroup" aria-label="Verb question 3">
+            <button class="verb-btn" data-correct="false" data-vq="vq3">List</button>
+            <button class="verb-btn" data-correct="false" data-vq="vq3">Describe</button>
+            <button class="verb-btn" data-correct="false" data-vq="vq3">Apply</button>
+            <button class="verb-btn" data-correct="true" data-vq="vq3">Justify</button>
+          </div>
+          <div class="feedback-box" id="vq3-feedback" aria-live="polite"></div>
+        </div>
+
+        <div class="continue-row" id="continue-6" style="display:none;">
+          <button class="back-btn" data-back="5">← Back</button>
+          <button class="btn-continue" data-next="7">Continue →</button>
         </div>
       </div>
     </section>
 
-    <!-- ─── SLIDE 7 · REWRITE ACTIVITY INTRO ────────────────── -->
-    <section class="slide" id="slide-7" data-slide="7" aria-label="Rewrite activity introduction">
-      <div class="slide-content centered">
-        <span class="eyebrow">Activity 3 of 3</span>
+    <!-- ─── SECTION 7 · REWRITE TIPS ─── -->
+    <section class="content-section locked" id="section-7" data-section="7">
+      <div class="section-inner">
+        <span class="eyebrow">Activity 3 of 3 · Prep</span>
         <h2>Time to Rewrite</h2>
-        <p class="body-text">
-          Spotting weak objectives is useful. Writing better ones is the real skill.
-          On the next screen, you'll rewrite two ineffective objectives using what you've learned.
-        </p>
-        <div class="tip-grid">
+        <p>Spotting weak objectives is useful. Writing better ones is the real skill. Keep these three things in mind as you work through the next exercise.</p>
+
+        <div class="tip-cards">
           <div class="tip-card">
-            <span class="tip-number">1</span>
-            <p>Start with a <strong>Bloom's action verb</strong> that matches the cognitive level you're targeting.</p>
+            <span class="tip-num">1</span>
+            <div>
+              <strong>Start with a Bloom's action verb</strong> that matches the cognitive level you're targeting.
+            </div>
           </div>
           <div class="tip-card">
-            <span class="tip-number">2</span>
-            <p>Name the <strong>specific skill or content</strong> the learner will work with — be precise.</p>
+            <span class="tip-num">2</span>
+            <div>
+              <strong>Name the specific skill or content</strong> the learner will work with — be precise.
+            </div>
           </div>
           <div class="tip-card">
-            <span class="tip-number">3</span>
-            <p>Add a <strong>condition or context</strong> when it makes the objective clearer or more realistic.</p>
+            <span class="tip-num">3</span>
+            <div>
+              <strong>Add a condition or context</strong> when it makes the objective clearer or more realistic.
+            </div>
           </div>
         </div>
-        <p class="body-text" style="margin-top: 1.5rem;">
-          There's no single right answer — but a strong rewrite will be observable, measurable,
-          and tied to a real task. You'll see example rewrites after each one.
-        </p>
+
+        <p>There's no single right answer — but a strong rewrite will be observable, measurable, and tied to a real task. You'll see example rewrites after each submission.</p>
+
+        <div class="continue-row">
+          <button class="back-btn" data-back="6">← Back</button>
+          <button class="btn-continue" data-next="8">Continue to Activity →</button>
+        </div>
       </div>
     </section>
 
-    <!-- ─── SLIDE 8 · REWRITE ACTIVITY ──────────────────────── -->
-    <section class="slide" id="slide-8" data-slide="8" aria-label="Rewrite activity">
-      <div class="slide-content centered">
-        <span class="eyebrow">Activity 3 of 3 · continued</span>
+    <!-- ─── SECTION 8 · REWRITE ACTIVITY ─── -->
+    <section class="content-section locked" id="section-8" data-section="8">
+      <div class="section-inner">
+        <span class="eyebrow">Activity 3 of 3</span>
         <h2>Rewrite These Objectives</h2>
 
-        <div class="rewrite-container" id="rewriteActivity">
-
-          <!-- Rewrite 1 -->
-          <div class="rewrite-block" id="rw1-block">
-            <div class="weak-obj-display">
-              <span class="weak-label">Weak objective</span>
-              <p class="weak-text">"Learn about the company's onboarding process."</p>
-            </div>
-            <label class="rewrite-label" for="rw1-input">
-              Your improved version:
-            </label>
-            <textarea
-              class="rewrite-input"
-              id="rw1-input"
-              placeholder='Start with an action verb — e.g., "Complete…" or "Describe…"'
-              rows="3"
-              aria-describedby="rw1-feedback"
-            ></textarea>
-            <div class="rewrite-actions">
-              <button class="btn-primary" id="rw1-submit">Check My Rewrite</button>
-            </div>
-            <div class="feedback-box rewrite-feedback" id="rw1-feedback" aria-live="polite"></div>
+        <div class="rewrite-block" id="rw1-block">
+          <div class="weak-display">
+            <span class="weak-tag">Weak objective</span>
+            <p>"Learn about the company's onboarding process."</p>
           </div>
-
-          <!-- Rewrite 2 -->
-          <div class="rewrite-block" id="rw2-block" style="display:none;">
-            <div class="weak-obj-display">
-              <span class="weak-label">Weak objective</span>
-              <p class="weak-text">"Be aware of best practices for giving feedback."</p>
-            </div>
-            <label class="rewrite-label" for="rw2-input">
-              Your improved version:
-            </label>
-            <textarea
-              class="rewrite-input"
-              id="rw2-input"
-              placeholder='Start with an action verb — e.g., "Apply…" or "Demonstrate…"'
-              rows="3"
-              aria-describedby="rw2-feedback"
-            ></textarea>
-            <div class="rewrite-actions">
-              <button class="btn-primary" id="rw2-submit">Check My Rewrite</button>
-            </div>
-            <div class="feedback-box rewrite-feedback" id="rw2-feedback" aria-live="polite"></div>
+          <label for="rw1-input">Your improved version:</label>
+          <textarea id="rw1-input" class="rewrite-input" rows="3" placeholder='Start with an action verb — e.g., "Complete…" or "Describe…"' aria-describedby="rw1-feedback"></textarea>
+          <div class="rewrite-actions">
+            <button class="btn-primary" id="rw1-submit">Check My Rewrite</button>
           </div>
+          <div class="feedback-box" id="rw1-feedback" aria-live="polite"></div>
+        </div>
 
+        <div class="rewrite-block" id="rw2-block" style="display:none;">
+          <div class="weak-display">
+            <span class="weak-tag">Weak objective</span>
+            <p>"Be aware of best practices for giving feedback."</p>
+          </div>
+          <label for="rw2-input">Your improved version:</label>
+          <textarea id="rw2-input" class="rewrite-input" rows="3" placeholder='Start with an action verb — e.g., "Apply…" or "Demonstrate…"' aria-describedby="rw2-feedback"></textarea>
+          <div class="rewrite-actions">
+            <button class="btn-primary" id="rw2-submit">Check My Rewrite</button>
+          </div>
+          <div class="feedback-box" id="rw2-feedback" aria-live="polite"></div>
+        </div>
+
+        <div class="continue-row" id="continue-8" style="display:none;">
+          <button class="back-btn" data-back="7">← Back</button>
+          <button class="btn-continue" data-next="9">Continue to Knowledge Check →</button>
         </div>
       </div>
     </section>
 
-    <!-- ─── SLIDE 9 · KNOWLEDGE CHECK Q1 ────────────────────── -->
-    <section class="slide" id="slide-9" data-slide="9" aria-label="Knowledge check question 1">
-      <div class="slide-content centered">
-        <span class="eyebrow">Knowledge Check · 1 of 3</span>
+    <!-- ─── SECTION 9 · KNOWLEDGE CHECK ─── -->
+    <section class="content-section locked" id="section-9" data-section="9">
+      <div class="section-inner">
+        <span class="eyebrow">Knowledge Check</span>
         <h2>Test What You Know</h2>
-        <p class="body-text">Select the best answer for each question.</p>
+        <p>Three questions. Select the best answer for each.</p>
 
+        <!-- KC1 -->
         <div class="kc-block" id="kc1-block">
-          <p class="kc-question">
-            Which of the following is the MOST important characteristic of an effective learning objective?
-          </p>
-          <div class="choices" role="radiogroup" aria-label="Knowledge check question 1">
-            <button class="choice-btn" data-correct="false" data-kc="kc1">
-              It is detailed enough to fill a full paragraph.
-            </button>
-            <button class="choice-btn" data-correct="false" data-kc="kc1">
-              It references a specific Bloom's Taxonomy level by name.
-            </button>
-            <button class="choice-btn" data-correct="true" data-kc="kc1">
-              It describes an observable and measurable behavior.
-            </button>
-            <button class="choice-btn" data-correct="false" data-kc="kc1">
-              It uses formal, academic language.
-            </button>
+          <p class="question-prompt">1. Which of the following is the MOST important characteristic of an effective learning objective?</p>
+          <div class="choices" role="radiogroup" aria-label="Knowledge check 1">
+            <button class="choice-btn" data-correct="false" data-kc="kc1">It is detailed enough to fill a full paragraph.</button>
+            <button class="choice-btn" data-correct="false" data-kc="kc1">It references a specific Bloom's Taxonomy level by name.</button>
+            <button class="choice-btn" data-correct="true" data-kc="kc1">It describes an observable and measurable behavior.</button>
+            <button class="choice-btn" data-correct="false" data-kc="kc1">It uses formal, academic language.</button>
           </div>
           <div class="feedback-box" id="kc1-feedback" aria-live="polite"></div>
         </div>
-      </div>
-    </section>
 
-    <!-- ─── SLIDE 10 · KNOWLEDGE CHECK Q2 ───────────────────── -->
-    <section class="slide" id="slide-10" data-slide="10" aria-label="Knowledge check question 2">
-      <div class="slide-content centered">
-        <span class="eyebrow">Knowledge Check · 2 of 3</span>
-        <h2>Test What You Know</h2>
-
+        <!-- KC2 -->
         <div class="kc-block" id="kc2-block">
-          <p class="kc-question">
-            A trainer wants learners to be able to build a full project schedule from scratch
-            using a new software tool. Which Bloom's level best fits this goal?
-          </p>
-          <div class="choices" role="radiogroup" aria-label="Knowledge check question 2">
+          <p class="question-prompt">2. A trainer wants learners to build a full project schedule from scratch using a new software tool. Which Bloom's level best fits this goal?</p>
+          <div class="choices" role="radiogroup" aria-label="Knowledge check 2">
             <button class="choice-btn" data-correct="false" data-kc="kc2">Remember</button>
             <button class="choice-btn" data-correct="false" data-kc="kc2">Understand</button>
             <button class="choice-btn" data-correct="false" data-kc="kc2">Apply</button>
@@ -491,43 +485,30 @@
           </div>
           <div class="feedback-box" id="kc2-feedback" aria-live="polite"></div>
         </div>
-      </div>
-    </section>
 
-    <!-- ─── SLIDE 11 · KNOWLEDGE CHECK Q3 ───────────────────── -->
-    <section class="slide" id="slide-11" data-slide="11" aria-label="Knowledge check question 3">
-      <div class="slide-content centered">
-        <span class="eyebrow">Knowledge Check · 3 of 3</span>
-        <h2>Test What You Know</h2>
-
+        <!-- KC3 -->
         <div class="kc-block" id="kc3-block">
-          <p class="kc-question">
-            "Gain familiarity with the new performance review process."<br />
-            What is the primary problem with this objective?
-          </p>
-          <div class="choices" role="radiogroup" aria-label="Knowledge check question 3">
-            <button class="choice-btn" data-correct="true" data-kc="kc3">
-              The verb is vague and cannot be observed or assessed.
-            </button>
-            <button class="choice-btn" data-correct="false" data-kc="kc3">
-              The objective is too specific about the topic area.
-            </button>
-            <button class="choice-btn" data-correct="false" data-kc="kc3">
-              It doesn't include a Bloom's level number.
-            </button>
-            <button class="choice-btn" data-correct="false" data-kc="kc3">
-              It is written from the trainer's perspective, not the learner's.
-            </button>
+          <p class="question-prompt">3. "Gain familiarity with the new performance review process." What is the primary problem with this objective?</p>
+          <div class="choices" role="radiogroup" aria-label="Knowledge check 3">
+            <button class="choice-btn" data-correct="true" data-kc="kc3">The verb is vague and cannot be observed or assessed.</button>
+            <button class="choice-btn" data-correct="false" data-kc="kc3">The objective is too specific about the topic area.</button>
+            <button class="choice-btn" data-correct="false" data-kc="kc3">It doesn't include a Bloom's level number.</button>
+            <button class="choice-btn" data-correct="false" data-kc="kc3">It is written from the trainer's perspective, not the learner's.</button>
           </div>
           <div class="feedback-box" id="kc3-feedback" aria-live="polite"></div>
+        </div>
+
+        <div class="continue-row" id="continue-9" style="display:none;">
+          <button class="back-btn" data-back="8">← Back</button>
+          <button class="btn-continue" data-next="10">See Results →</button>
         </div>
       </div>
     </section>
 
-    <!-- ─── SLIDE 12 · COMPLETION ────────────────────────────── -->
-    <section class="slide" id="slide-12" data-slide="12" aria-label="Course completion">
-      <div class="slide-content centered completion-screen">
-        <div class="completion-badge" aria-hidden="true">✓</div>
+    <!-- ─── SECTION 10 · COMPLETION ─── -->
+    <section class="content-section locked" id="section-10" data-section="10">
+      <div class="section-inner completion-section">
+        <div class="completion-mark" aria-hidden="true">✓</div>
         <h2>You Did It.</h2>
         <p class="lead">Here's what you can now do:</p>
 
@@ -555,47 +536,18 @@
           </div>
         </div>
 
-        <div class="score-display" id="scoreDisplay" aria-live="polite">
-          <!-- Score injected by JS -->
-        </div>
+        <div class="score-card" id="scoreDisplay" aria-live="polite"></div>
 
         <div class="completion-actions">
-          <button class="btn-primary" id="restartBtn" aria-label="Restart the course">
-            Start Over
-          </button>
-          <a
-            class="btn-secondary"
-            href="https://jacobjones.dev"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Visit portfolio (opens in new tab)"
-          >
-            View Portfolio ↗
-          </a>
+          <button class="btn-primary" id="restartBtn">Start Over</button>
+          <a class="btn-outline" href="https://jacobjones.dev" target="_blank" rel="noopener noreferrer">View Portfolio ↗</a>
         </div>
 
-        <p class="attribution">
-          Designed &amp; developed by <strong>Jake Jones</strong> · Instructional Design Portfolio
-        </p>
+        <p class="attribution">Designed &amp; developed by <strong>Jake Jones</strong> · Instructional Design Portfolio</p>
       </div>
     </section>
 
   </main>
-
-  <!-- ============================================================
-       BOTTOM NAVIGATION
-  ============================================================ -->
-  <footer class="nav-footer" role="navigation" aria-label="Slide navigation">
-    <button class="nav-btn" id="prevBtn" aria-label="Previous slide" disabled>
-      ← Back
-    </button>
-    <div class="nav-dots" id="navDots" aria-hidden="true">
-      <!-- Dots injected by JS -->
-    </div>
-    <button class="nav-btn primary" id="nextBtn" aria-label="Next slide">
-      Next →
-    </button>
-  </footer>
 
   <script src="main.js"></script>
 </body>
