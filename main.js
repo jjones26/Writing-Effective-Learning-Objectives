@@ -1,419 +1,317 @@
 /**
  * Writing Effective Learning Objectives
- * main.js — Course logic, interactivity, and state management
+ * main.js — Course logic for scroll-based, section-by-section layout
  *
  * Architecture:
- *  - CourseState: single source of truth for slide position and scores
- *  - SlideManager: handles transitions and progress rendering
- *  - ActivityManager: activity-specific logic (spot-the-weak, verb selection, rewrite)
- *  - KnowledgeCheck: final quiz logic
- *  - init(): wires everything together on DOMContentLoaded
+ *  - CourseState   single source of truth for current section and completion
+ *  - SectionManager  shows/hides sections, updates sidebar, scrolls into view
+ *  - Activity1     "Spot the weak objective" (2 sequential questions)
+ *  - Activity2     "Pick the right Bloom's verb" (3 sequential verb questions)
+ *  - RewriteActivity  open-text rewrite with verb heuristic check
+ *  - KnowledgeCheck  3 multiple-choice questions, all on section 9
+ *  - initNavigation  wires continue buttons, back buttons, sidebar clicks
  */
 
 'use strict';
 
 /* ============================================================
-   COURSE CONFIGURATION
+   CONSTANTS
 ============================================================ */
 
-const TOTAL_SLIDES = 12;
+const TOTAL_SECTIONS = 10;
 
-/** Milestone labels shown in the progress track tooltip */
-const MILESTONE_LABELS = [
-  'Intro',
-  'What Is Effective?',
-  'Bloom\'s Taxonomy',
-  'Examples',
-  'Activity 1',
-  'Activity 2',
-  'Prep: Rewrite',
-  'Rewrite Activity',
-  'Check 1',
-  'Check 2',
-  'Check 3',
-  'Complete',
-];
-
-/** Slides that require an activity to be completed before advancing */
-const GATED_SLIDES = new Set([5, 6, 8, 9, 10, 11]);
+// Sections that need an activity completed before the Continue shows
+const GATED = new Set([5, 6, 8, 9]);
 
 /* ============================================================
    COURSE STATE
 ============================================================ */
 
 const CourseState = {
-  currentSlide: 1,
+  current: 1,        // 1-based section number
+  highest: 1,        // furthest section ever unlocked
 
-  /** Which activity stages have been completed */
   completed: {
-    q1: false,   // Activity 1, question 1
-    q2: false,   // Activity 1, question 2
-    vq1: false,  // Activity 2, verb question 1
-    vq2: false,  // Activity 2, verb question 2
-    vq3: false,  // Activity 2, verb question 3
-    rw1: false,  // Rewrite 1
-    rw2: false,  // Rewrite 2
-    kc1: false,  // Knowledge check 1
-    kc2: false,  // Knowledge check 2
-    kc3: false,  // Knowledge check 3
+    q1: false, q2: false,
+    vq1: false, vq2: false, vq3: false,
+    rw1: false, rw2: false,
+    kc1: false, kc2: false, kc3: false,
   },
 
-  /** Knowledge check results for scoring */
-  kcResults: {
-    kc1: null,
-    kc2: null,
-    kc3: null,
-  },
+  kcResults: { kc1: null, kc2: null, kc3: null },
 
-  /** Track which activity sub-stage we're on */
-  activity1Stage: 1,   // 1 or 2
-  activity2Stage: 1,   // 1, 2, or 3
-
-  /** Whether slides 5/6/8 can be advanced past */
-  canAdvance(slideNum) {
-    switch (slideNum) {
+  // Can we show the Continue / reveal-continue for a gated section?
+  gateOpen(section) {
+    switch (section) {
       case 5:  return this.completed.q1 && this.completed.q2;
       case 6:  return this.completed.vq1 && this.completed.vq2 && this.completed.vq3;
       case 8:  return this.completed.rw1 && this.completed.rw2;
-      case 9:  return this.completed.kc1;
-      case 10: return this.completed.kc2;
-      case 11: return this.completed.kc3;
+      case 9:  return this.completed.kc1 && this.completed.kc2 && this.completed.kc3;
       default: return true;
     }
   },
 
-  /** Count how many knowledge check questions were answered correctly */
-  getKCScore() {
-    return Object.values(this.kcResults).filter(r => r === true).length;
+  kcScore() {
+    return Object.values(this.kcResults).filter(Boolean).length;
   },
 };
 
 /* ============================================================
-   SLIDE MANAGER
+   SECTION MANAGER
 ============================================================ */
 
-const SlideManager = {
-  slides: null,
-  progressFill: null,
-  milestones: null,
-  navDots: null,
-  slideCounter: null,
-  prevBtn: null,
-  nextBtn: null,
+const SectionManager = {
 
   init() {
-    this.slides = document.querySelectorAll('.slide');
-    this.progressFill = document.getElementById('progressFill');
-    this.milestones = document.getElementById('milestones');
-    this.navDots = document.getElementById('navDots');
-    this.slideCounter = document.getElementById('slideCounter');
-    this.prevBtn = document.getElementById('prevBtn');
-    this.nextBtn = document.getElementById('nextBtn');
-
-    this.buildMilestones();
-    this.buildNavDots();
-    this.updateUI();
+    this.updateSidebar();
+    this.updateProgress();
   },
 
   /**
-   * Build milestone nodes in the progress track
+   * Navigate to a section by number.
+   * unlocking = true means we're advancing forward (unlocks the next section).
    */
-  buildMilestones() {
-    this.milestones.innerHTML = '';
-    for (let i = 1; i <= TOTAL_SLIDES; i++) {
-      const node = document.createElement('div');
-      node.className = 'milestone-node';
-      node.setAttribute('role', 'listitem');
+  goTo(num, scrollBehavior = 'smooth') {
+    if (num < 1 || num > TOTAL_SECTIONS) return;
 
-      const tooltip = document.createElement('span');
-      tooltip.className = 'milestone-tooltip';
-      tooltip.textContent = MILESTONE_LABELS[i - 1];
-      node.appendChild(tooltip);
+    const target = document.getElementById(`section-${num}`);
+    if (!target) return;
 
-      this.milestones.appendChild(node);
-    }
+    // Unlock section if not already visible
+    target.classList.remove('locked');
+    target.style.display = '';
+
+    CourseState.current = num;
+    if (num > CourseState.highest) CourseState.highest = num;
+
+    // Scroll the section into view
+    target.scrollIntoView({ behavior: scrollBehavior, block: 'start' });
+
+    this.updateSidebar();
+    this.updateProgress();
+    this.updateMobileCounter();
   },
 
-  /**
-   * Build navigation dots in the footer
-   */
-  buildNavDots() {
-    this.navDots.innerHTML = '';
-    for (let i = 1; i <= TOTAL_SLIDES; i++) {
-      const dot = document.createElement('div');
-      dot.className = 'nav-dot';
-      dot.setAttribute('aria-hidden', 'true');
-      this.navDots.appendChild(dot);
-    }
+  /** Mark a section complete and go to the next */
+  advance(fromSection, toSection) {
+    // Mark from-section nav item as completed
+    const navItem = document.querySelector(`.nav-item[data-section="${fromSection}"]`);
+    if (navItem) navItem.classList.add('completed');
+
+    this.goTo(toSection);
   },
 
-  /**
-   * Go to a specific slide index (1-based)
-   * @param {number} targetSlide
-   * @param {string} direction - 'forward' | 'backward'
-   */
-  goTo(targetSlide, direction = 'forward') {
-    if (targetSlide < 1 || targetSlide > TOTAL_SLIDES) return;
-
-    const fromSlide = CourseState.currentSlide;
-    CourseState.currentSlide = targetSlide;
-
-    // Animate out the current slide
-    const fromEl = document.querySelector(`.slide[data-slide="${fromSlide}"]`);
-    if (fromEl) {
-      fromEl.classList.remove('active');
-      fromEl.classList.add(direction === 'forward' ? 'exit-left' : 'exit-right');
-      setTimeout(() => fromEl.classList.remove('exit-left', 'exit-right'), 450);
-    }
-
-    // Animate in the target slide
-    const toEl = document.querySelector(`.slide[data-slide="${targetSlide}"]`);
-    if (toEl) {
-      // Scroll to top when entering a slide
-      toEl.scrollTop = 0;
-      toEl.classList.add('active');
-    }
-
-    this.updateUI();
-
-    // If we just landed on the completion slide, populate the score
-    if (targetSlide === TOTAL_SLIDES) {
-      this.renderCompletion();
-    }
+  /** Go back to a previous section (already visible, just scroll) */
+  goBack(toSection) {
+    CourseState.current = toSection;
+    const target = document.getElementById(`section-${toSection}`);
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    this.updateSidebar();
+    this.updateMobileCounter();
   },
 
-  /**
-   * Update all dynamic UI elements (progress, buttons, dots, counter)
-   */
-  updateUI() {
-    const current = CourseState.currentSlide;
+  updateSidebar() {
+    const items = document.querySelectorAll('.nav-item');
+    items.forEach(item => {
+      const n = parseInt(item.dataset.section, 10);
+      item.classList.remove('active', 'locked-nav');
 
-    // Slide counter
-    this.slideCounter.textContent = `${current} / ${TOTAL_SLIDES}`;
+      if (n === CourseState.current) {
+        item.classList.add('active');
+      }
 
-    // Progress fill width
-    const pct = ((current - 1) / (TOTAL_SLIDES - 1)) * 100;
-    this.progressFill.style.width = `${pct}%`;
-
-    // Milestone nodes
-    const nodes = this.milestones.querySelectorAll('.milestone-node');
-    nodes.forEach((node, i) => {
-      const slideNum = i + 1;
-      node.classList.remove('completed', 'current');
-      if (slideNum < current) {
-        node.classList.add('completed');
-      } else if (slideNum === current) {
-        node.classList.add('current');
+      // Lock nav items beyond the furthest unlocked section
+      if (n > CourseState.highest) {
+        item.classList.add('locked-nav');
       }
     });
+  },
 
-    // Nav dots
-    const dots = this.navDots.querySelectorAll('.nav-dot');
-    dots.forEach((dot, i) => {
-      const slideNum = i + 1;
-      dot.classList.remove('active', 'completed');
-      if (slideNum === current) {
-        dot.classList.add('active');
-      } else if (slideNum < current) {
-        dot.classList.add('completed');
-      }
-    });
+  updateProgress() {
+    const fill = document.getElementById('progressFill');
+    const label = document.getElementById('progressLabel');
+    const pct = Math.round(((CourseState.highest - 1) / (TOTAL_SECTIONS - 1)) * 100);
+    if (fill) fill.style.width = `${pct}%`;
+    if (label) label.textContent = `${pct}% complete`;
+  },
 
-    // Prev / Next buttons
-    this.prevBtn.disabled = current === 1;
-    this.nextBtn.disabled = GATED_SLIDES.has(current) && !CourseState.canAdvance(current);
+  updateMobileCounter() {
+    const el = document.getElementById('mobileCounter');
+    if (el) el.textContent = `${CourseState.current}/${TOTAL_SECTIONS}`;
+  },
 
-    // On the last slide, hide Next
-    if (current === TOTAL_SLIDES) {
-      this.nextBtn.style.visibility = 'hidden';
-    } else {
-      this.nextBtn.style.visibility = 'visible';
+  /** Reveal the continue row for a gated section once the activity is done */
+  revealContinue(sectionNum) {
+    const row = document.getElementById(`continue-${sectionNum}`);
+    if (row) {
+      row.style.display = '';
+      // Smooth scroll to bring the button into view
+      setTimeout(() => row.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
     }
   },
 
-  /**
-   * Render the completion screen with score
-   */
   renderCompletion() {
-    const score = CourseState.getKCScore();
-    const scoreEl = document.getElementById('scoreDisplay');
-    if (scoreEl) {
-      const messages = [
-        'Keep reviewing — you can always come back.',
-        'Good start — review Bloom\'s and try again.',
-        'Solid work — you\'ve got the core concepts.',
-        'Perfect score! You\'re ready to write objectives.',
-      ];
-      scoreEl.innerHTML = `
-        <strong>${score}/3 on the knowledge check</strong>
-        ${messages[score]}
-      `;
-    }
+    const score = CourseState.kcScore();
+    const el = document.getElementById('scoreDisplay');
+    if (!el) return;
+    const msgs = [
+      'Keep reviewing — the concepts will click.',
+      'Good start. Review Bloom\'s and try again.',
+      'Solid work — you\'ve got the core concepts.',
+      'Perfect score. You\'re ready to write objectives.',
+    ];
+    el.innerHTML = `<strong>${score}/3</strong>${msgs[score]}`;
   },
 };
 
 /* ============================================================
-   ACTIVITY MANAGER — Activity 1: Spot the Weak Objective
+   ACTIVITY 1 — Spot the Weak Objective
 ============================================================ */
 
 const Activity1 = {
+
   init() {
-    // Wire up all choice buttons in the activity
     document.querySelectorAll('[data-question]').forEach(btn => {
-      btn.addEventListener('click', (e) => this.handleChoice(e.currentTarget));
+      btn.addEventListener('click', () => this.handle(btn));
     });
   },
 
-  handleChoice(btn) {
-    const questionId = btn.dataset.question;       // 'q1' or 'q2'
-    const isCorrect = btn.dataset.correct === 'true';
-    const feedbackEl = document.getElementById(`${questionId}-feedback`);
-    const container = btn.closest('[role="radiogroup"]');
+  handle(btn) {
+    const qId = btn.dataset.question;
+    const correct = btn.dataset.correct === 'true';
+    const group = btn.closest('[role="radiogroup"]');
+    const feedback = document.getElementById(`${qId}-feedback`);
 
-    // Disable all buttons in this group
-    container.querySelectorAll('.choice-btn').forEach(b => {
+    // Disable all in group, highlight correct
+    group.querySelectorAll('.choice-btn').forEach(b => {
       b.disabled = true;
       if (b.dataset.correct === 'true') b.classList.add('correct');
     });
+    if (!correct) btn.classList.add('incorrect');
 
-    if (!isCorrect) {
-      btn.classList.add('incorrect');
-    }
+    feedback.className = `feedback-box ${correct ? 'correct-fb' : 'incorrect-fb'} show`;
+    feedback.textContent = correct ? this.correctMsg(qId) : this.incorrectMsg(qId);
 
-    // Show feedback
-    if (isCorrect) {
-      feedbackEl.className = 'feedback-box correct-fb show';
-      feedbackEl.innerHTML = this.getCorrectFeedback(questionId, btn.textContent.trim());
-    } else {
-      feedbackEl.className = 'feedback-box incorrect-fb show';
-      feedbackEl.innerHTML = this.getIncorrectFeedback(questionId);
-    }
+    CourseState.completed[qId] = true;
 
-    // Mark this question as complete
-    CourseState.completed[questionId] = true;
-
-    // Advance to next sub-question or unlock the Next button
-    if (questionId === 'q1' && CourseState.activity1Stage === 1) {
+    if (qId === 'q1') {
+      // Show Q2 after a pause
       setTimeout(() => {
-        CourseState.activity1Stage = 2;
         document.getElementById('q1-block').style.display = 'none';
-        document.getElementById('q2-block').style.display = '';
+        const q2 = document.getElementById('q2-block');
+        q2.style.display = '';
+        q2.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }, 1800);
-    } else if (questionId === 'q2') {
-      // Both done — unlock Next
-      setTimeout(() => SlideManager.updateUI(), 1800);
+    } else if (qId === 'q2' && CourseState.gateOpen(5)) {
+      setTimeout(() => SectionManager.revealContinue(5), 1800);
     }
   },
 
-  getCorrectFeedback(qId, text) {
-    return `✓ That's right. <strong>${text.slice(0, 50)}…</strong> uses the verb "appreciate" (q1) or "understand" (q2) — both are cognitive states, not observable behaviors. You can't watch someone "appreciate" something in a measurable way.`;
+  correctMsg(q) {
+    return q === 'q1'
+      ? '✓ Correct. "Appreciate" describes an internal feeling — you can\'t observe it or design an assessment around it.'
+      : '✓ Correct. "Understand" is the classic unmeasurable verb. It names a state, not a behavior you can see or test.';
   },
 
-  getIncorrectFeedback(qId) {
-    return `Not quite. Look for the objective that uses a verb describing an internal state — something you can't directly observe or measure. Verbs like "calculate," "demonstrate," and "compare" all produce evidence you can assess.`;
+  incorrectMsg(q) {
+    return q === 'q1'
+      ? 'Not quite. Look for a verb that describes a mental state rather than an action. "Calculate," "demonstrate," and "compare" all produce observable evidence. One doesn\'t.'
+      : 'Not quite. "Classify," "construct," and "identify" are all measurable — learners produce something you can evaluate. One verb in this list describes an internal state with no observable finish line.';
   },
 };
 
 /* ============================================================
-   ACTIVITY MANAGER — Activity 2: Pick the Right Bloom's Verb
+   ACTIVITY 2 — Pick the Right Bloom's Verb
 ============================================================ */
 
 const Activity2 = {
+
   stages: ['vq1', 'vq2', 'vq3'],
 
   init() {
     document.querySelectorAll('[data-vq]').forEach(btn => {
-      btn.addEventListener('click', (e) => this.handleVerb(e.currentTarget));
+      btn.addEventListener('click', () => this.handle(btn));
     });
   },
 
-  handleVerb(btn) {
+  handle(btn) {
     const vqId = btn.dataset.vq;
-    const isCorrect = btn.dataset.correct === 'true';
-    const feedbackEl = document.getElementById(`${vqId}-feedback`);
-    const container = btn.closest('[role="radiogroup"]');
+    const correct = btn.dataset.correct === 'true';
+    const group = btn.closest('[role="radiogroup"]');
+    const feedback = document.getElementById(`${vqId}-feedback`);
 
-    // Disable buttons
-    container.querySelectorAll('.verb-btn').forEach(b => {
+    group.querySelectorAll('.verb-btn').forEach(b => {
       b.disabled = true;
       if (b.dataset.correct === 'true') b.classList.add('correct');
     });
+    if (!correct) btn.classList.add('incorrect');
 
-    if (!isCorrect) btn.classList.add('incorrect');
-
-    // Feedback
-    if (isCorrect) {
-      feedbackEl.className = 'feedback-box correct-fb show';
-      feedbackEl.textContent = this.getCorrectFeedback(vqId);
-    } else {
-      feedbackEl.className = 'feedback-box incorrect-fb show';
-      feedbackEl.textContent = this.getIncorrectFeedback(vqId);
-    }
+    feedback.className = `feedback-box ${correct ? 'correct-fb' : 'incorrect-fb'} show`;
+    feedback.textContent = correct ? this.correctMsg(vqId) : this.incorrectMsg(vqId);
 
     CourseState.completed[vqId] = true;
 
-    // Advance to next verb question
-    const stageIdx = this.stages.indexOf(vqId);
-    const nextId = this.stages[stageIdx + 1];
+    const idx = this.stages.indexOf(vqId);
+    const next = this.stages[idx + 1];
 
-    if (nextId) {
+    if (next) {
       setTimeout(() => {
         document.getElementById(vqId).style.display = 'none';
-        const nextEl = document.getElementById(nextId);
+        const nextEl = document.getElementById(next);
         nextEl.style.display = '';
-        nextEl.classList.add('active-q');
+        nextEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }, 1800);
-    } else {
-      // All three done
-      setTimeout(() => SlideManager.updateUI(), 1800);
+    } else if (CourseState.gateOpen(6)) {
+      setTimeout(() => SectionManager.revealContinue(6), 1800);
     }
   },
 
-  getCorrectFeedback(vqId) {
-    const msgs = {
-      vq1: '"Distinguish" is an Analyze-level verb — perfect for asking learners to identify differences or spot something in context. "Recall" and "Know" are far too low (Remember-level) for this task, and "Understand" is too vague to be measurable.',
-      vq2: '"Demonstrate" is an Apply-level verb — it signals that the learner should perform a process, not just describe it. "Define" is Remember-level, and "Appreciate" and "Be aware of" are not Bloom\'s verbs at all.',
-      vq3: '"Justify" is Evaluate-level, which matches the task of weighing evidence and making a judgment call. "List" and "Describe" are much lower on the taxonomy, and "Apply" means executing a skill, not evaluating competing options.',
+  correctMsg(vqId) {
+    const m = {
+      vq1: '✓ Right. "Distinguish" is an Analyze-level verb — it asks learners to identify differences in context, not just recall a list.',
+      vq2: '✓ Right. "Demonstrate" is Apply-level — the learner performs the process, not just describes it.',
+      vq3: '✓ Right. "Justify" is Evaluate-level — it requires weighing evidence and defending a position, not just recalling or applying.',
     };
-    return msgs[vqId];
+    return m[vqId];
   },
 
-  getIncorrectFeedback(vqId) {
-    const msgs = {
-      vq1: 'Not quite. "Recall" and "Know" are Remember-level — too low for recognizing something in context. "Understand" isn\'t measurable. The right answer is "Distinguish," which lives at Analyze (Level 4).',
-      vq2: 'Not quite. The scenario calls for performing a skill, which points to Apply (Level 3). "Define" is Remember-level. "Appreciate" and "Be aware of" aren\'t Bloom\'s verbs. The answer is "Demonstrate."',
-      vq3: 'Not quite. "List" and "Describe" are low-level verbs. "Apply" means executing a skill. This scenario is about making a judgment call — that\'s Evaluate (Level 5), and "Justify" is the right verb.',
+  incorrectMsg(vqId) {
+    const m = {
+      vq1: '"Recall" and "Know" sit at Remember — far too low for spotting hazards in context. "Understand" isn\'t measurable. The answer is "Distinguish" (Analyze, Level 4).',
+      vq2: '"Define" is Remember-level. "Appreciate" and "Be aware of" aren\'t Bloom\'s verbs at all. The answer is "Demonstrate" (Apply, Level 3).',
+      vq3: '"List" and "Describe" are low-level. "Apply" means executing a known process. Making a judgment call about competing options is Evaluate — the answer is "Justify" (Level 5).',
     };
-    return msgs[vqId];
+    return m[vqId];
   },
 };
 
 /* ============================================================
-   ACTIVITY MANAGER — Activity 3: Rewrite Objectives
+   REWRITE ACTIVITY
 ============================================================ */
 
 const RewriteActivity = {
-  /** Minimum character count before we'll evaluate a rewrite */
-  MIN_LENGTH: 20,
 
-  /** Sample strong rewrites to show after submission */
-  EXAMPLES: {
-    rw1: 'Example strong rewrites: "Complete the five-step onboarding checklist independently within the first week." Or: "Describe the three phases of the onboarding process in your own words."',
-    rw2: 'Example strong rewrites: "Demonstrate the SBI (Situation–Behavior–Impact) feedback model in a mock peer review scenario." Or: "Apply three feedback best practices when responding to a case study conversation."',
-  },
+  MIN_LEN: 20,
 
-  /**
-   * Basic heuristic to check whether a rewrite looks measurable.
-   * Checks for the presence of a Bloom's action verb.
-   */
   BLOOM_VERBS: new Set([
-    'list','recall','name','identify','define','state','recognize','label','match','reproduce',
-    'explain','describe','summarize','classify','paraphrase','interpret','discuss','report','review','restate',
-    'use','demonstrate','execute','implement','calculate','solve','apply','practice','illustrate','operate',
-    'compare','differentiate','examine','distinguish','analyze','contrast','separate','test','question','experiment',
+    'list','recall','name','identify','define','state','recognize','label','match',
+    'explain','describe','summarize','classify','paraphrase','interpret','discuss','report','review',
+    'use','demonstrate','execute','implement','calculate','solve','apply','practice','illustrate','operate','show',
+    'compare','differentiate','examine','distinguish','analyze','contrast','separate','test','question','break down',
     'assess','justify','critique','defend','judge','evaluate','argue','support','recommend','select','appraise',
     'design','develop','construct','produce','formulate','create','build','compose','plan','generate','invent','assemble',
+    'complete','draft','write','present','perform',
   ]),
+
+  WEAK_PHRASES: {
+    rw1: ['learn about', 'learn the'],
+    rw2: ['be aware of', 'aware of'],
+  },
+
+  EXAMPLES: {
+    rw1: 'Example rewrites: "Complete the five steps of the onboarding checklist independently within the first week." Or: "Describe the three phases of the onboarding process in your own words."',
+    rw2: 'Example rewrites: "Demonstrate the SBI feedback model in a mock peer review scenario." Or: "Apply three feedback best practices when responding to a case study conversation."',
+  },
 
   init() {
     document.getElementById('rw1-submit').addEventListener('click', () => this.evaluate('rw1'));
@@ -422,69 +320,56 @@ const RewriteActivity = {
 
   evaluate(rwId) {
     const input = document.getElementById(`${rwId}-input`);
-    const feedbackEl = document.getElementById(`${rwId}-feedback`);
+    const feedback = document.getElementById(`${rwId}-feedback`);
     const text = input.value.trim();
 
-    // Too short
-    if (text.length < this.MIN_LENGTH) {
-      feedbackEl.className = 'feedback-box incorrect-fb show';
-      feedbackEl.textContent = 'Your rewrite looks a bit short. Try adding more detail — what should the learner be able to do, and in what context?';
+    if (text.length < this.MIN_LEN) {
+      feedback.className = 'feedback-box incorrect-fb show';
+      feedback.textContent = 'That\'s a bit short. Add more detail — what should the learner be able to do, and in what context?';
       return;
     }
 
-    // Check for a measurable verb
-    const words = text.toLowerCase().replace(/[^a-z\s]/g, '').split(/\s+/);
-    const hasBloomsVerb = words.some(w => this.BLOOM_VERBS.has(w));
-
-    // Check they're not just copying the weak objective
-    const weakObjectives = {
-      rw1: 'learn about the company',
-      rw2: 'be aware of best practices',
-    };
-    const isCopy = text.toLowerCase().includes(weakObjectives[rwId]);
-
+    // Check for kept weak phrasing
+    const lower = text.toLowerCase();
+    const isCopy = (this.WEAK_PHRASES[rwId] || []).some(p => lower.includes(p));
     if (isCopy) {
-      feedbackEl.className = 'feedback-box incorrect-fb show';
-      feedbackEl.textContent = 'It looks like you may have kept the original wording. Try replacing the verb with something measurable, like "describe," "demonstrate," or "complete."';
+      feedback.className = 'feedback-box incorrect-fb show';
+      feedback.textContent = 'It looks like you kept the original wording. Try replacing the verb with something measurable, like "describe," "demonstrate," or "complete."';
       return;
     }
 
-    if (hasBloomsVerb) {
-      feedbackEl.className = 'feedback-box correct-fb show';
-      feedbackEl.innerHTML = `
-        ✓ Nice work — your rewrite uses a measurable verb. 
-        <br><br>
-        <em>${this.EXAMPLES[rwId]}</em>
-      `;
-      this.markComplete(rwId, input);
+    // Check for a Bloom's verb
+    const words = lower.replace(/[^a-z\s]/g, '').split(/\s+/);
+    const hasVerb = words.some(w => this.BLOOM_VERBS.has(w));
+
+    if (hasVerb) {
+      feedback.className = 'feedback-box correct-fb show';
+      feedback.innerHTML = `✓ Nice — your rewrite uses a measurable verb.<br><br><em>${this.EXAMPLES[rwId]}</em>`;
+      this.markDone(rwId, input);
     } else {
-      feedbackEl.className = 'feedback-box info-fb show';
-      feedbackEl.innerHTML = `
-        You've written something, but check your verb. Verbs like "understand," "know," or "learn" are hard to measure. 
-        Try starting with something like: <strong>Describe, Demonstrate, Identify, Apply, Compare,</strong> or <strong>Complete.</strong>
-        <br><br>
-        <em>${this.EXAMPLES[rwId]}</em>
-      `;
+      feedback.className = 'feedback-box info-fb show';
+      feedback.innerHTML = `Check your verb. Words like "understand," "know," or "learn" are hard to measure. Try starting with: <strong>Describe, Demonstrate, Identify, Apply, Complete,</strong> or <strong>Compare.</strong><br><br><em>${this.EXAMPLES[rwId]}</em>`;
     }
   },
 
-  markComplete(rwId, inputEl) {
+  markDone(rwId, input) {
     CourseState.completed[rwId] = true;
-    inputEl.disabled = true;
-    document.getElementById(`${rwId}-submit`).disabled = true;
-    document.getElementById(`${rwId}-submit`).textContent = '✓ Submitted';
+    input.disabled = true;
+    const btn = document.getElementById(`${rwId}-submit`);
+    btn.disabled = true;
+    btn.textContent = '✓ Submitted';
 
-    // If rw1 just completed, show rw2 after a beat
-    if (rwId === 'rw1' && !CourseState.completed.rw2) {
+    if (rwId === 'rw1') {
       setTimeout(() => {
         document.getElementById('rw1-block').style.display = 'none';
-        document.getElementById('rw2-block').style.display = '';
-      }, 1600);
+        const rw2 = document.getElementById('rw2-block');
+        rw2.style.display = '';
+        rw2.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 1500);
     }
 
-    // If both are done, unlock Next
-    if (CourseState.completed.rw1 && CourseState.completed.rw2) {
-      setTimeout(() => SlideManager.updateUI(), 400);
+    if (CourseState.gateOpen(8)) {
+      setTimeout(() => SectionManager.revealContinue(8), rwId === 'rw1' ? 3000 : 1500);
     }
   },
 };
@@ -494,176 +379,206 @@ const RewriteActivity = {
 ============================================================ */
 
 const KnowledgeCheck = {
+
   init() {
     document.querySelectorAll('[data-kc]').forEach(btn => {
-      btn.addEventListener('click', (e) => this.handleAnswer(e.currentTarget));
+      btn.addEventListener('click', () => this.handle(btn));
     });
   },
 
-  handleAnswer(btn) {
+  handle(btn) {
     const kcId = btn.dataset.kc;
-    const isCorrect = btn.dataset.correct === 'true';
-    const feedbackEl = document.getElementById(`${kcId}-feedback`);
-    const container = btn.closest('[role="radiogroup"]');
+    const correct = btn.dataset.correct === 'true';
+    const group = btn.closest('[role="radiogroup"]');
+    const feedback = document.getElementById(`${kcId}-feedback`);
 
-    // Disable all answers and reveal correct one
-    container.querySelectorAll('.choice-btn').forEach(b => {
+    group.querySelectorAll('.choice-btn').forEach(b => {
       b.disabled = true;
       if (b.dataset.correct === 'true') b.classList.add('correct');
     });
+    if (!correct) btn.classList.add('incorrect');
 
-    if (!isCorrect) btn.classList.add('incorrect');
+    feedback.className = `feedback-box ${correct ? 'correct-fb' : 'incorrect-fb'} show`;
+    feedback.textContent = correct ? this.correctMsg(kcId) : this.incorrectMsg(kcId);
 
-    // Record result
-    CourseState.kcResults[kcId] = isCorrect;
     CourseState.completed[kcId] = true;
+    CourseState.kcResults[kcId] = correct;
 
-    // Feedback
-    if (isCorrect) {
-      feedbackEl.className = 'feedback-box correct-fb show';
-      feedbackEl.textContent = this.getCorrectFeedback(kcId);
-    } else {
-      feedbackEl.className = 'feedback-box incorrect-fb show';
-      feedbackEl.textContent = this.getIncorrectFeedback(kcId);
+    if (CourseState.gateOpen(9)) {
+      setTimeout(() => SectionManager.revealContinue(9), 1200);
     }
-
-    // Unlock Next after a moment
-    setTimeout(() => SlideManager.updateUI(), 1200);
   },
 
-  getCorrectFeedback(kcId) {
-    const msgs = {
-      kc1: 'Correct. An effective objective must describe something you can see, hear, or assess directly. Length, formal language, and Bloom\'s level labels are all secondary to that core requirement.',
-      kc2: 'Correct. Building something from scratch — a full project schedule — is a Create-level task (Level 6). If the objective were to explain how the software works, that\'d be Understand. If it were to use an existing template, that\'d be Apply.',
-      kc3: 'Correct. "Gain familiarity" can\'t be observed or assessed — it\'s an internal state. The fix is straightforward: replace it with a specific, observable verb. "Complete the performance review for one direct report" is a much stronger version.',
+  correctMsg(id) {
+    const m = {
+      kc1: 'Correct. An observable, measurable behavior is the non-negotiable. Length, formal language, and Bloom\'s level labels are all secondary.',
+      kc2: 'Correct. Building something new from scratch is Bloom\'s Level 6: Create. Explaining it would be Understand; using a template would be Apply.',
+      kc3: 'Correct. "Gain familiarity" is unobservable and unassessable. Replacing it with a specific verb — like "complete" or "describe" — fixes it immediately.',
     };
-    return msgs[kcId];
+    return m[id];
   },
 
-  getIncorrectFeedback(kcId) {
-    const msgs = {
-      kc1: 'Not quite. The correct answer is that an effective objective describes an observable and measurable behavior. Without that, there\'s no way to assess whether learning occurred — regardless of length or level labels.',
-      kc2: 'Not quite. Think about what "build from scratch" implies. It\'s not recalling, explaining, or applying an existing process — it\'s producing something new. That\'s Bloom\'s Level 6: Create.',
-      kc3: 'Not quite. The primary issue is the verb "gain familiarity" — it\'s unobservable and can\'t be assessed. The other answer choices describe issues that aren\'t actually problems with the objective.',
+  incorrectMsg(id) {
+    const m = {
+      kc1: 'Not quite. The correct answer is that an effective objective must describe an observable, measurable behavior. Without that, you can\'t design a valid assessment.',
+      kc2: 'Not quite. "Building from scratch" means producing something new — that\'s Create (Level 6), not Apply or Understand.',
+      kc3: 'Not quite. The core problem is the verb. "Gain familiarity" can\'t be observed or assessed — the other issues described aren\'t actually problems with the objective.',
     };
-    return msgs[kcId];
+    return m[id];
   },
 };
 
 /* ============================================================
-   NAVIGATION WIRING
+   NAVIGATION — Continue buttons, Back buttons, Sidebar
 ============================================================ */
 
 function initNavigation() {
-  const prevBtn = document.getElementById('prevBtn');
-  const nextBtn = document.getElementById('nextBtn');
+
+  // Continue buttons (data-next)
+  document.addEventListener('click', e => {
+    const btn = e.target.closest('.btn-continue');
+    if (!btn) return;
+    const next = parseInt(btn.dataset.next, 10);
+    const from = next - 1;
+    SectionManager.advance(from, next);
+
+    // If going to completion, populate score
+    if (next === 10) {
+      setTimeout(() => SectionManager.renderCompletion(), 300);
+    }
+  });
+
+  // Back buttons (data-back)
+  document.addEventListener('click', e => {
+    const btn = e.target.closest('.back-btn');
+    if (!btn || btn.classList.contains('hidden')) return;
+    const to = parseInt(btn.dataset.back, 10);
+    SectionManager.goBack(to);
+  });
+
+  // Sidebar nav items
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', () => {
+      if (item.classList.contains('locked-nav')) return;
+      const n = parseInt(item.dataset.section, 10);
+      CourseState.current = n;
+      SectionManager.goBack(n); // scrolls, doesn't re-unlock
+      SectionManager.updateSidebar();
+
+      // Close mobile sidebar if open
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebarOverlay');
+      sidebar.classList.remove('open');
+      overlay.classList.remove('visible');
+    });
+  });
+
+  // Restart button
   const restartBtn = document.getElementById('restartBtn');
+  if (restartBtn) {
+    restartBtn.addEventListener('click', () => restart());
+  }
 
-  prevBtn.addEventListener('click', () => {
-    if (CourseState.currentSlide > 1) {
-      SlideManager.goTo(CourseState.currentSlide - 1, 'backward');
-    }
-  });
+  // Mobile menu toggle
+  const menuToggle = document.getElementById('menuToggle');
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
 
-  nextBtn.addEventListener('click', () => {
-    const current = CourseState.currentSlide;
-    if (current < TOTAL_SLIDES && CourseState.canAdvance(current)) {
-      SlideManager.goTo(current + 1, 'forward');
-    }
-  });
+  if (menuToggle) {
+    menuToggle.addEventListener('click', () => {
+      sidebar.classList.toggle('open');
+      overlay.classList.toggle('visible');
+      menuToggle.setAttribute('aria-expanded', sidebar.classList.contains('open'));
+    });
+  }
 
-  restartBtn.addEventListener('click', () => {
-    // Reset state
-    CourseState.currentSlide = 1;
-    Object.keys(CourseState.completed).forEach(k => (CourseState.completed[k] = false));
-    Object.keys(CourseState.kcResults).forEach(k => (CourseState.kcResults[k] = null));
-    CourseState.activity1Stage = 1;
-    CourseState.activity2Stage = 1;
-
-    // Reset activity UI
-    resetActivities();
-
-    // Go back to slide 1
-    // Remove 'active' from current slide
-    document.querySelectorAll('.slide.active').forEach(s => s.classList.remove('active'));
-    const firstSlide = document.querySelector('.slide[data-slide="1"]');
-    if (firstSlide) {
-      firstSlide.scrollTop = 0;
-      firstSlide.classList.add('active');
-    }
-    CourseState.currentSlide = 1;
-    SlideManager.updateUI();
-  });
-
-  // Keyboard navigation
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
-      if (!nextBtn.disabled) nextBtn.click();
-    }
-    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
-      if (!prevBtn.disabled) prevBtn.click();
-    }
-  });
+  if (overlay) {
+    overlay.addEventListener('click', () => {
+      sidebar.classList.remove('open');
+      overlay.classList.remove('visible');
+    });
+  }
 }
 
 /* ============================================================
-   RESET UTILITY — restores all activity UI to initial state
+   RESTART
 ============================================================ */
 
-function resetActivities() {
-  // Activity 1
-  document.querySelectorAll('[data-question]').forEach(btn => {
-    btn.disabled = false;
-    btn.classList.remove('correct', 'incorrect');
+function restart() {
+  // Reset state
+  CourseState.current = 1;
+  CourseState.highest = 1;
+  Object.keys(CourseState.completed).forEach(k => (CourseState.completed[k] = false));
+  Object.keys(CourseState.kcResults).forEach(k => (CourseState.kcResults[k] = null));
+
+  // Hide all sections except first
+  for (let i = 2; i <= TOTAL_SECTIONS; i++) {
+    const s = document.getElementById(`section-${i}`);
+    if (s) {
+      s.classList.add('locked');
+      s.style.display = '';
+    }
+  }
+
+  // Reset sidebar
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.classList.remove('active', 'completed');
+    const n = parseInt(item.dataset.section, 10);
+    if (n > 1) item.classList.add('locked-nav');
   });
-  document.querySelectorAll('[data-vq]').forEach(btn => {
-    btn.disabled = false;
-    btn.classList.remove('correct', 'incorrect');
+
+  // Reset activity UI
+  resetAllActivities();
+
+  // Scroll to top
+  window.scrollTo({ top: 0, behavior: 'instant' });
+  SectionManager.init();
+}
+
+function resetAllActivities() {
+  // Choice / verb / kc buttons
+  document.querySelectorAll('.choice-btn, .verb-btn').forEach(b => {
+    b.disabled = false;
+    b.classList.remove('correct', 'incorrect');
   });
+
+  // All feedback boxes
   document.querySelectorAll('.feedback-box').forEach(el => {
     el.className = 'feedback-box';
     el.textContent = '';
   });
 
-  // Rewrite feedback
-  document.querySelectorAll('.rewrite-feedback').forEach(el => {
-    el.className = 'feedback-box rewrite-feedback';
-    el.textContent = '';
-  });
-
-  // Restore activity 1 questions
+  // Activity 1 questions
   document.getElementById('q1-block').style.display = '';
   document.getElementById('q2-block').style.display = 'none';
 
-  // Restore activity 2 verb questions
-  document.getElementById('vq1').style.display = '';
-  document.getElementById('vq1').classList.add('active-q');
-  document.getElementById('vq2').style.display = 'none';
-  document.getElementById('vq3').style.display = 'none';
+  // Activity 2 verb questions
+  ['vq1','vq2','vq3'].forEach((id, i) => {
+    const el = document.getElementById(id);
+    el.style.display = i === 0 ? '' : 'none';
+  });
 
-  // Restore rewrite blocks
+  // Rewrite blocks
   document.getElementById('rw1-block').style.display = '';
   document.getElementById('rw2-block').style.display = 'none';
   ['rw1-input', 'rw2-input'].forEach(id => {
     const el = document.getElementById(id);
-    el.value = '';
-    el.disabled = false;
+    if (el) { el.value = ''; el.disabled = false; }
   });
   ['rw1-submit', 'rw2-submit'].forEach(id => {
     const el = document.getElementById(id);
-    el.disabled = false;
-    el.textContent = 'Check My Rewrite';
+    if (el) { el.disabled = false; el.textContent = 'Check My Rewrite'; }
   });
 
-  // KC buttons
-  document.querySelectorAll('[data-kc]').forEach(btn => {
-    btn.disabled = false;
-    btn.classList.remove('correct', 'incorrect');
+  // Gated continue rows
+  ['continue-5','continue-6','continue-8','continue-9'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
   });
 
   // Score display
-  const scoreEl = document.getElementById('scoreDisplay');
-  if (scoreEl) scoreEl.innerHTML = '';
+  const score = document.getElementById('scoreDisplay');
+  if (score) score.innerHTML = '';
 }
 
 /* ============================================================
@@ -671,13 +586,14 @@ function resetActivities() {
 ============================================================ */
 
 document.addEventListener('DOMContentLoaded', () => {
-  SlideManager.init();
+  // Mark section 1 active in sidebar
+  const firstNav = document.querySelector('.nav-item[data-section="1"]');
+  if (firstNav) firstNav.classList.add('active');
+
+  SectionManager.init();
   Activity1.init();
   Activity2.init();
   RewriteActivity.init();
   KnowledgeCheck.init();
   initNavigation();
-
-  // Update Next button state on load
-  SlideManager.updateUI();
 });
